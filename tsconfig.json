@@ -26,7 +26,7 @@
 
     // ======== Library and Type Definitions ========
     "lib": ["DOM", "ESNext"], // Include the latest ECMAScript and DOM types for client-side code
-    "types": ["node"] // Add Node.js types if your project uses Node.js-specific features
+    "types": ["node", "jest"] // Add Node.js types if your project uses Node.js-specific features
   },
 
   // ======== File Inclusion/Exclusion ========
