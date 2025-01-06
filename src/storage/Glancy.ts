@@ -51,7 +51,8 @@ export class Glancy extends BaseStorage {
 
       const item: GlancyItem<T> = JSON.parse(data);
       if (!item || typeof item.value === 'undefined') {
-        throw new GlancyError('Invalid item structure');
+        this.handleError(`Invalid item for key ${key}`, null);
+        return null;
       }
 
       if (this.isExpired(item)) {
