@@ -31,6 +31,8 @@
 
   // ======== File Inclusion/Exclusion ========
   "include": [
+    "__tests__/**/*", // Include all TypeScript files in the test folder
+    "scripts/**/*", // Include all TypeScript files in the scripts folder
     "src/**/*" // Include all TypeScript files in the src folder
   ],
 
