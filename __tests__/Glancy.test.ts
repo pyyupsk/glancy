@@ -1,5 +1,5 @@
-import { Glancy } from '../Glancy';
-import { GlancyError } from '../../utils/errors';
+import { Glancy } from '../src/storage/Glancy';
+import { GlancyError } from '../src/utils/errors';
 
 describe('Glancy', () => {
   let storage: Glancy;

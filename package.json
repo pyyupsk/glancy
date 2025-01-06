@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "description": "A secure and efficient storage solution with support for compression and encryption.",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "tsup",
     "format": "prettier --write . --ignore-path .gitignore",
     "lint": "eslint src/**/*.ts",
     "prepare": "husky",
@@ -26,8 +27,8 @@
     "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.4.2",
     "prettier-plugin-pkg": "^0.18.1",
-    "rimraf": "^6.0.1",
     "ts-jest": "^29.2.5",
+    "tsup": "^6.0.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0"
   }
