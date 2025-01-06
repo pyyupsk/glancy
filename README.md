@@ -1,26 +1,26 @@
-# Glancy Storage Library
+# 🚀 Glancy Storage Library
 
-Glancy is a powerful, flexible, and efficient client-side storage library for modern JavaScript applications. It provides a range of features including key-value storage, item expiration (TTL), encryption, compression, and the ability to handle multiple items at once. This project is designed to be simple to use, while also providing advanced features for complex storage needs.
+**Glancy** is a powerful, flexible, and efficient client-side storage library for modern JavaScript applications. It provides a range of features including key-value storage, item expiration (TTL), encryption, compression, and the ability to handle multiple items at once. This project is designed to be simple to use while also providing advanced features for complex storage needs.
 
-## Features
+## ✨ Features
 
-- **Namespace Support**: All items are stored under a unique namespace.
-- **Time-to-Live (TTL)**: You can set an expiration time for stored items.
-- **Compression**: Supports LZW compression for optimizing storage space.
-- **Encryption**: AES encryption for secure storage of sensitive data.
-- **Error Handling**: Graceful error handling with custom error classes.
-- **Batch Operations**: Methods to get/set multiple items in a single operation.
-- **Storage Integrity**: Validations and checks to ensure safe storage usage.
+- 🗂️ **Namespace Support**: All items are stored under a unique namespace.
+- ⏱️ **Time-to-Live (TTL)**: You can set an expiration time for stored items.
+- 🗜️ **Compression**: Supports LZW compression for optimizing storage space.
+- 🔒 **Encryption**: AES encryption for secure storage of sensitive data.
+- ⚠️ **Error Handling**: Graceful error handling with custom error classes.
+- 📦 **Batch Operations**: Methods to get/set multiple items in a single operation.
+- 🛡️ **Storage Integrity**: Validations and checks to ensure safe storage usage.
 
-## Usage
+## 📦 Installation
 
-Before using Glancy, you need to install the package:
+Install the package via npm:
 
 ```bash
 npm install glancy
 ```
 
-Then, you can import the Glancy class:
+Then, import the `Glancy` class:
 
 ```typescript
 import { Glancy } from 'glancy';
@@ -28,68 +28,70 @@ import { Glancy } from 'glancy';
 const storage = new Glancy({ namespace: 'my_app' });
 ```
 
-### Basic Storage Operations
+## 🛠️ Usage
 
-You can use the Glancy storage to set, get, and remove items easily.
+### 🗝️ Basic Storage Operations
+
+Easily set, get, and remove items:
 
 ```typescript
-import { Glancy } from 'glancy';
-
 const storage = new Glancy({ namespace: 'my_app' });
 
-// Set a value
+// 🔑 Set a value
 storage.set('my_key', { value: 'Hello, world!' }, 60000); // TTL of 1 minute
 
-// Get a value
+// 🔍 Get a value
 const data = storage.get<{ value: string }>('my_key');
 console.log(data?.value); // Outputs: Hello, world!
 
-// Remove a value
+// 🗑️ Remove a value
 storage.remove('my_key');
 
-// Clear all items in the namespace
+// 🧹 Clear all items in the namespace
 storage.clear();
 ```
 
-### Compression and Encryption
+### 🔒 Compression and Encryption
 
-Glancy supports compression and encryption to optimize storage space and secure your data.
+Optimize storage and secure your data with built-in compression and encryption:
 
 ```typescript
 const storage = new Glancy({
   namespace: 'my_app',
-  encrypt: true, // Enable encryption
-  compress: true, // Enable compression
-  encryptionKey: 'my-secret-key', // Encryption key
+  encrypt: true, // 🔒 Enable encryption
+  compress: true, // 🗜️ Enable compression
+  encryptionKey: 'my-secret-key',
 });
 
-// Set a value with compression and encryption
+// Set a value securely
 storage.set('secure_key', { value: 'Sensitive Information' }, 60000);
 
-// Get the encrypted and compressed value
+// Retrieve the secure value
 const result = storage.get<{ value: string }>('secure_key');
 console.log(result?.value); // Outputs: Sensitive Information
 ```
 
-### Batch Operations
+> 🔧 **Tip**: You can generate a secure key using `openssl` by running `openssl rand -base64 32`
 
-Glancy allows you to perform operations on multiple keys at once:
+### 🤹‍♂️ Batch Operations
+
+Perform operations on multiple keys at once:
 
 ```typescript
-// Setting multiple items
+// Set multiple items
 storage.setMany({
   key1: { value: 'value1' },
   key2: { value: 'value2' },
 });
 
-// Getting multiple items
+// Get multiple items
 const values = storage.getMany(['key1', 'key2']);
 console.log(values['key1']); // Outputs: value1
 ```
 
-### Expiration (TTL)
+### ⏳ Expiration (TTL)
 
-Items stored with Glancy can expire after a specified TTL. If the TTL expires, the item is automatically removed from storage.
+Store items with a lifespan:
 
 ```typescript
 storage.set('temporary_data', { value: 'Expires Soon' }, 5000); // Expires in 5 seconds
@@ -100,29 +102,29 @@ setTimeout(() => {
 }, 6000);
 ```
 
-## API Reference
+## 📖 API Reference
 
-### Glancy Methods
+### ⚙️ Glancy Methods
 
 #### `set(key: string, value: T, ttl?: number): void`
 
-Sets a value in storage. You can optionally specify a TTL (time-to-live).
+Stores a value with an optional TTL.
 
 #### `get<T>(key: string): T | null`
 
-Gets a value from storage. Returns `null` if the key does not exist or has expired.
+Retrieves a value. Returns `null` if the key doesn’t exist or has expired.
 
 #### `remove(key: string): void`
 
-Removes an item from storage.
+Deletes an item from storage.
 
 #### `clear(): void`
 
-Clears all items within the current namespace.
+Removes all items in the current namespace.
 
 #### `keys(): string[]`
 
-Returns an array of keys within the current namespace.
+Lists all keys in the namespace.
 
 #### `has(key: string): boolean`
 
@@ -134,27 +136,24 @@ Updates the TTL for an existing item.
 
 #### `getTTL(key: string): number | null`
 
-Gets the remaining TTL for a given key.
+Gets the remaining TTL for a key.
 
 #### `size(): number`
 
-Returns the total size (in bytes) of all items in the namespace.
+Calculates the total size (in bytes) of all items in the namespace.
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions! If you'd like to contribute to Glancy, please follow these steps:
+We ❤️ contributions! Here's how to get started:
 
-1. Fork the repository
-2. Create a new branch (`git checkout -b feat/my-feature`)
-3. Commit your changes (`git commit -am 'feat: add new feature'`)
-4. Push to the branch (`git push origin feat/my-feature`)
-5. Create a new Pull Request
+1. 🍴 Fork the repository
+2. 🌱 Create a new branch (`git checkout -b feat/my-feature`)
+3. 💻 Commit your changes (`git commit -am 'feat: add new feature'`)
+4. 🚀 Push to your branch (`git push origin feat/my-feature`)
+5. 🛠️ Create a Pull Request
 
-## License
+## 📜 License
 
-Glancy is licensed under the xxx License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **[Apache 2.0 License](LICENSE)**.
 
----
-
-> [!NOTE]
-> This project is still actively maintained. For any issues or feature requests, feel free to open an issue or submit a pull request.
+> 🔧 **Pro Tip**: If you encounter any issues or have feature requests, feel free to open an issue or submit a pull request. Let's make Glancy even better!
