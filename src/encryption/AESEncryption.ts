@@ -1,5 +1,7 @@
-import CryptoJS from 'crypto-js';
-import { EncryptionOptions } from './types';
+import * as CryptoJS from 'crypto-js';
+
+import type { EncryptionOptions } from './types';
+
 import { EncryptionError } from '../utils/errors';
 
 export class AESEncryption {

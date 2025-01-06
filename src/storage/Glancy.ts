@@ -1,9 +1,10 @@
-import { BaseStorage } from './BaseStorage';
-import { GlancyOptions, GlancyItem } from '../types';
+import type { GlancyOptions, GlancyItem } from '../types';
+
 import { LZWCompressor } from '../compression/LZWCompressor';
 import { AESEncryption } from '../encryption/AESEncryption';
-import { validateStorageKey, validateTTL } from '../utils/validators';
 import { GlancyError } from '../utils/errors';
+import { validateStorageKey, validateTTL } from '../utils/validators';
+import { BaseStorage } from './BaseStorage';
 
 export class Glancy extends BaseStorage {
   private readonly compression?: LZWCompressor;

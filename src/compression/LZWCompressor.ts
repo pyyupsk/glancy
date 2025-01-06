@@ -1,4 +1,5 @@
-import { CompressionOptions } from './types';
+import type { CompressionOptions } from './types';
+
 import { CompressionError } from '../utils/errors';
 
 export class LZWCompressor {

@@ -1,4 +1,4 @@
-import { IStorage, GlancyOptions, GlancyItem } from '../types';
+import type { IStorage, GlancyOptions, GlancyItem } from '../types';
 
 export abstract class BaseStorage implements IStorage {
   protected readonly namespace: string;
