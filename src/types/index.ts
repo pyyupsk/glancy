@@ -25,7 +25,7 @@ export interface GlancyOptions {
 }
 
 export interface GlancyItem<T> {
-  value: T;
+  value: T | null;
   timestamp: number;
   ttl?: number;
   version?: number;

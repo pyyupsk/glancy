@@ -95,7 +95,7 @@ export class Glancy extends BaseStorage {
       validateTTL(ttl);
 
       const item: GlancyItem<T> = {
-        value,
+        value: value === null || value === undefined ? null : value,
         timestamp: Date.now(),
         ttl: ttl || this.defaultTTL,
         version: 1,
@@ -111,7 +111,18 @@ export class Glancy extends BaseStorage {
         serializedData = this.encryption.encrypt(serializedData);
       }
 
-      localStorage.setItem(this.getNamespacedKey(key), serializedData);
+      try {
+        localStorage.setItem(this.getNamespacedKey(key), serializedData);
+      } catch (error) {
+        if (error instanceof Error) {
+          if (error.name === 'QuotaExceededError') {
+            throw new GlancyError('Storage quota exceeded');
+          } else {
+            throw error;
+          }
+        }
+        throw error;
+      }
     } catch (error) {
       this.handleError('Error setting item', error);
     }
@@ -188,10 +199,42 @@ export class Glancy extends BaseStorage {
    * @returns True if the TTL was updated, otherwise false
    */
   public touch(key: string, ttl?: number): boolean {
-    const item = this.get(key);
-    if (item === null) return false;
-    this.set(key, item, ttl);
-    return true;
+    try {
+      validateStorageKey(key);
+      validateTTL(ttl);
+
+      const rawData = localStorage.getItem(this.getNamespacedKey(key));
+      if (!rawData) return false;
+
+      let data = rawData;
+      if (this.encryption) {
+        data = this.encryption.decrypt(data);
+      }
+
+      if (this.compression) {
+        data = this.compression?.decompressData(data);
+      }
+
+      const item: GlancyItem<unknown> = JSON.parse(data);
+      item.ttl = ttl || this.defaultTTL;
+      item.timestamp = Date.now();
+
+      let serializedData = JSON.stringify(item);
+
+      if (this.compression) {
+        serializedData = this.compression.compressData(serializedData);
+      }
+
+      if (this.encryption) {
+        serializedData = this.encryption.encrypt(serializedData);
+      }
+
+      localStorage.setItem(this.getNamespacedKey(key), serializedData);
+      return true;
+    } catch (error) {
+      this.handleError('Error updating TTL', error);
+      return false;
+    }
   }
 
   /**
@@ -201,6 +244,8 @@ export class Glancy extends BaseStorage {
    */
   public getTTL(key: string): number | null {
     try {
+      validateStorageKey(key);
+
       const rawData = localStorage.getItem(this.getNamespacedKey(key));
       if (!rawData) return null;
 
@@ -209,12 +254,16 @@ export class Glancy extends BaseStorage {
         data = this.encryption.decrypt(data);
       }
 
+      if (this.compression) {
+        data = this.compression?.decompressData(data);
+      }
+
       const item: GlancyItem<unknown> = JSON.parse(data);
       if (!item.ttl) return null;
 
-      const remaining = item.timestamp + item.ttl - Date.now();
-      return remaining > 0 ? remaining : null;
-    } catch {
+      return item.ttl - (Date.now() - item.timestamp);
+    } catch (error) {
+      this.handleError('Error getting TTL', error);
       return null;
     }
   }
@@ -224,10 +273,15 @@ export class Glancy extends BaseStorage {
    * @returns The total size in bytes
    */
   public size(): number {
-    return this.keys().reduce((size, key) => {
-      const item = localStorage.getItem(this.getNamespacedKey(key));
-      return size + (item ? item.length * 2 : 0); // UTF-16 uses 2 bytes per character
-    }, 0);
+    let totalSize = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(this.namespace)) {
+        const value = localStorage.getItem(key);
+        totalSize += key.length + (value?.length ?? 0);
+      }
+    }
+    return totalSize;
   }
 
   protected getNamespacedKey(key: string): string {
