@@ -32,9 +32,7 @@ export class AESEncryption {
       return CryptoJS.AES.encrypt(data, this.key).toString();
     } catch (error) {
       throw new EncryptionError(
-        error instanceof Error
-          ? error.message
-          : 'An unknown encryption error occurred'
+        error instanceof Error ? error.message : 'Failed to encrypt data'
       );
     }
   }
@@ -45,9 +43,7 @@ export class AESEncryption {
       return bytes.toString(CryptoJS.enc.Utf8);
     } catch (error) {
       throw new EncryptionError(
-        error instanceof Error
-          ? error.message
-          : 'An unknown encryption error occurred'
+        error instanceof Error ? error.message : 'Failed to decrypt data'
       );
     }
   }
