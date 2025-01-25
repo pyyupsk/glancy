@@ -5,8 +5,10 @@ on:
       - '**'
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache-pnpm.outputs.cache-hit }}
     steps:
       - uses: actions/checkout@v4
         name: ⬇️ Checkout repository
@@ -17,6 +19,14 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: 🔍 Cache pnpm store
+        id: cache-pnpm
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
       - name: 🔍 Install dependencies
         run: pnpm install --frozen-lockfile
       - name: 🔍 Typecheck
