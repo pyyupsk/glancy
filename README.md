@@ -106,13 +106,21 @@ setTimeout(() => {
 
 ### ⚙️ Glancy Methods
 
+#### `get<T>(key: string): T | null`
+
+Retrieves a value. Returns `null` if the key doesn’t exist or has expired.
+
 #### `set(key: string, value: T, ttl?: number): void`
 
 Stores a value with an optional TTL.
 
-#### `get<T>(key: string): T | null`
+#### `getMany<T>(keys: string[]): Record<string, T | null>`
 
-Retrieves a value. Returns `null` if the key doesn’t exist or has expired.
+Retrieves multiple values at once.
+
+#### `setMany<T>(values: Record<string, T>, ttl?: number): void`
+
+Stores multiple values at once.
 
 #### `remove(key: string): void`
 
@@ -141,6 +149,10 @@ Gets the remaining TTL for a key.
 #### `size(): number`
 
 Calculates the total size (in bytes) of all items in the namespace.
+
+---
+
+For more details, visit the [Glancy Storage Library Wiki](https://github.com/pyyupsk/glancy/wiki/Glancy-Storage-Library-Wiki).
 
 ## 🤝 Contributing
 
