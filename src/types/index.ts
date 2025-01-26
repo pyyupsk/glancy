@@ -18,7 +18,10 @@ import type { CompressionMeta } from '../compression/types';
 
 export interface GlancyOptions {
   namespace?: string;
-  encryptionKey?: string;
+  encryption?: {
+    enabled: boolean;
+    key: string;
+  };
   defaultTTL?: number;
   compress?: boolean;
   dictionarySize?: number;

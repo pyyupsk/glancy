@@ -37,9 +37,9 @@ export class Glancy extends BaseStorage {
       });
     }
 
-    if (options.encryptionKey) {
+    if (options.encryption && options.encryption.enabled) {
       this.encryption = new AESEncryption({
-        key: options.encryptionKey,
+        key: options.encryption.key,
       });
     }
   }

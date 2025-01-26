@@ -58,9 +58,11 @@ Optimize storage and secure your data with built-in compression and encryption:
 ```typescript
 const storage = new Glancy({
   namespace: 'my_app',
-  encrypt: true, // 🔒 Enable encryption
+  encryption: {
+    enabled: true, // 🔒 Enable encryption
+    key: 'my-secret-key',
+  },
   compress: true, // 🗜️ Enable compression
-  encryptionKey: 'my-secret-key',
 });
 
 // Set a value securely
@@ -104,7 +106,17 @@ setTimeout(() => {
 
 ## 📖 API Reference
 
-### ⚙️ Glancy Methods
+### 📦 Class Options
+
+| Option           | Description                                         | Default                       |
+| ---------------- | --------------------------------------------------- | ----------------------------- |
+| `namespace`      | A unique identifier for the storage namespace.      | `glancy`                      |
+| `encryption`     | An object containing encryption configuration.      | `{ enabled: false, key: '' }` |
+| `defaultTTL`     | The default TTL (in milliseconds) for stored items. | `null`                        |
+| `compress`       | Whether to enable compression for stored items.     | `false`                       |
+| `dictionarySize` | The size of the compression dictionary.             | `4096`                        |
+
+### ⚙️ Methods
 
 #### `get<T>(key: string): T | null`
 

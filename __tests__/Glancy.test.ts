@@ -117,7 +117,9 @@ describe('Glancy Storage Library', () => {
     const encryptionKey = 'test-encryption-key';
 
     beforeEach(() => {
-      storage = new Glancy({ encryptionKey });
+      storage = new Glancy({
+        encryption: { enabled: true, key: encryptionKey },
+      });
     });
 
     test('should encrypt stored data', () => {
