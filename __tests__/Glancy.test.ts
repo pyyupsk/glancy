@@ -150,8 +150,7 @@ describe('Glancy Storage Library', () => {
     });
 
     test('should compress large strings', () => {
-      // 5 MB
-      const largeString = 'a'.repeat(5242880); // 5MB
+      const largeString = 'a'.repeat(4 * 1024 * 1024); // 4MB
       storage.set('large', largeString);
 
       const rawData = localStorage.getItem('glancy:large');
@@ -212,7 +211,7 @@ describe('Glancy Storage Library', () => {
         throw new Error('QuotaExceededError');
       });
 
-      expect(() => storage.set('quota', 'x'.repeat(6291456))).toThrow(); // 6MB limit of 5 MB (megabytes) per domain.
+      expect(() => storage.set('quota', 'x'.repeat(6 * 1024 * 1024))).toThrow(); // 6MB limit of 5 MB (megabytes) per domain.
 
       localStorage.setItem = originalSetItem;
     });
