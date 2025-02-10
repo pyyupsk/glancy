@@ -2,7 +2,7 @@
   "name": "glancy",
   "version": "0.0.1",
   "description": "A secure and efficient storage solution with support for compression and encryption.",
-  "packageManager": "pnpm@9.15.5+sha512.845196026aab1cc3f098a0474b64dfbab2afe7a1b4e91dd86895d8e4aa32a7a6d03049e2d0ad770bbe4de023a7122fb68c1a1d6e0d033c7076085f9d5d4800d4",
+  "packageManager": "pnpm@10.2.1+sha512.398035c7bd696d0ba0b10a688ed558285329d27ea994804a52bad9167d8e3a72bcb993f9699585d3ca25779ac64949ef422757a6c31102c12ab932e5cbe5cc92",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -23,13 +23,13 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
-    "@eslint/js": "^9.19.0",
+    "@eslint/js": "^9.20.0",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.0",
-    "eslint": "^9.19.0",
+    "@types/node": "^22.13.1",
+    "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-perfectionist": "^4.7.0",
+    "eslint-plugin-perfectionist": "^4.8.0",
     "eslint-plugin-prettier": "^5.2.3",
     "glob": "^11.0.1",
     "globals": "^15.14.0",
@@ -38,13 +38,13 @@
     "jest-environment-jsdom": "^29.7.0",
     "knip": "^5.43.6",
     "lint-staged": "^15.4.3",
-    "prettier": "^3.4.2",
+    "prettier": "^3.5.0",
     "prettier-plugin-pkg": "^0.18.1",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.22.0"
+    "typescript-eslint": "^8.23.0"
   }
 }
