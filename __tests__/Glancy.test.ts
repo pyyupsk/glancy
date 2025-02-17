@@ -1,5 +1,4 @@
-import { Glancy } from '../src';
-import { GlancyError } from '../src/utils/errors';
+import { Glancy } from '../dist';
 
 describe('Glancy Storage Library', () => {
   let storage: Glancy;
@@ -194,14 +193,22 @@ describe('Glancy Storage Library', () => {
 
   describe('Error Handling', () => {
     test('should throw on invalid keys', () => {
-      expect(() => storage.set('', 'value')).toThrow(GlancyError);
+      expect(() => storage.set('', 'value')).toThrow(
+        'Error setting item: Invalid storage key'
+      );
       // @ts-expect-error Testing invalid key
-      expect(() => storage.set(123, 'value')).toThrow(GlancyError);
+      expect(() => storage.set(123, 'value')).toThrow(
+        'Error setting item: Invalid storage key'
+      );
     });
 
     test('should throw on invalid TTL values', () => {
-      expect(() => storage.set('key', 'value', -1)).toThrow(GlancyError);
-      expect(() => storage.set('key', 'value', 1.5)).toThrow(GlancyError);
+      expect(() => storage.set('key', 'value', -1)).toThrow(
+        'Error setting item: Invalid TTL value'
+      );
+      expect(() => storage.set('key', 'value', 1.5)).toThrow(
+        'Error setting item: Invalid TTL value'
+      );
     });
 
     test('should handle storage quota exceeded', () => {
