@@ -1,5 +1,11 @@
 # glancy
 
+## 0.0.3
+
+### Patch Changes
+
+- Update vulnerable dependencies to patch security issues.
+
 ## 0.0.2
 
 ### Patch Changes
