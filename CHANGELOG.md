@@ -10,6 +10,7 @@
 - **Updated storage methods**: Refactored methods such as `getTTL`, `has`, and `touch` to ensure they now return structured responses with more information on success or failure.
 
 #### Changes
+
 - **Compression & Encryption**: Updated the compression and encryption mechanisms, including refactoring to make the compression level configurable.
 - **Enhanced validation**: Improved validation of keys and TTL (time-to-live) values across multiple storage operations.
 

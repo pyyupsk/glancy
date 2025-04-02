@@ -201,7 +201,7 @@ interface GlancyResponse<T> {
 
 ---
 
-For more details, visit the [Glancy Storage Library Wiki](https://github.com/pyyupsk/glancy/wiki/Glancy-Storage-Library-Wiki).
+For more details, visit the [Glancy Storage Library Documentation](/docs/index.md).
 
 ## 🤝 Contributing
 
