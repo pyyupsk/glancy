@@ -163,14 +163,22 @@ export class Glancy extends BaseStorage {
           data: undefined,
         };
       } catch (error) {
-        if (error instanceof Error && error.name === 'QuotaExceededError') {
+        if (
+          error instanceof DOMException &&
+          error.name === 'QuotaExceededError'
+        ) {
           return {
             success: false,
             message: 'Storage quota exceeded',
             data: undefined,
           };
         }
-        throw error;
+        return {
+          success: false,
+          message:
+            error instanceof Error ? error.message : 'Error setting item',
+          data: undefined,
+        };
       }
     } catch (error) {
       return {
@@ -507,14 +515,5 @@ export class Glancy extends BaseStorage {
         data: 0,
       };
     }
-  }
-
-  protected getNamespacedKey(key: string): string {
-    return `${this.namespace}:${key}`;
-  }
-
-  protected isExpired(item: GlancyItem<unknown>): boolean {
-    if (!item.ttl) return false;
-    return Date.now() > item.timestamp + item.ttl;
   }
 }

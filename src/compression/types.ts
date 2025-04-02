@@ -17,10 +17,3 @@
 export interface CompressionOptions {
   compressionLevel?: number; // 0-9, where 9 is maximum compression
 }
-
-export interface CompressionMeta {
-  originalSize: number;
-  compressedSize: number;
-  algorithm: string;
-  level: number;
-}

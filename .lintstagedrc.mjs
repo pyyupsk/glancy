@@ -1,9 +1,10 @@
+// In .lintstagedrc.mjs
 export default {
-  '*': 'npx prettier --write --ignore-unknown',
-  '**/*.(ts|tsx|js|jsx)': (filenames) => {
-    return [
-      `npx eslint --fix ${filenames.map((f) => JSON.stringify(f)).join(' ')}`,
-      `npx tsc --noEmit ${filenames.map((f) => JSON.stringify(f)).join(' ')}`,
-    ];
-  },
+  '**/*.(ts|tsx|js|jsx)': [
+    'npx prettier --write --ignore-unknown',
+    'npx eslint --fix',
+  ],
+  'src/**/*.(ts|tsx|js|jsx)': [
+    (files) => `npx tsc --noEmit ${files.join(' ')}`,
+  ],
 };

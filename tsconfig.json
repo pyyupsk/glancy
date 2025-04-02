@@ -1,43 +1,55 @@
 {
   "compilerOptions": {
-    // ======== Basic Configuration ========
-    "target": "ESNext", // Use the latest JavaScript features (ESNext)
-    "module": "ESNext", // Use the latest module system (ESNext)
-    "moduleResolution": "node", // Resolve modules like Node.js does
+    // Target and Module Configuration
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
 
-    // ======== Strict Type Checking ========
-    "strict": true, // Enable strict type checking for better safety
-    "forceConsistentCasingInFileNames": true, // Ensure consistent casing in file names
+    // Strict Type Checking
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
 
-    // ======== Compatibility and Interop ========
-    "esModuleInterop": true, // Enable interoperability between CommonJS and ES Modules
-    "allowSyntheticDefaultImports": true, // Allow synthetic default imports even if the module doesn't have a default export
-    "resolveJsonModule": true, // Allow importing .json files as modules
+    // Code Quality
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
 
-    // ======== Optimization ========
-    "skipLibCheck": true, // Skip type checking of declaration files to speed up builds
-    "skipDefaultLibCheck": true, // Skip checking the default library files for faster compilation
+    // Module Interoperability
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
 
-    // ======== Output Configuration ========
-    "noEmit": true, // Do not generate output files (only for type-checking)
+    // Advanced Features
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
 
-    // ======== Isolation ========
-    "isolatedModules": true, // Ensure each file can be independently transpiled (useful for ts-node or similar)
+    // Output Configuration
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
 
-    // ======== Library and Type Definitions ========
-    "lib": ["DOM", "ESNext"], // Include the latest ECMAScript and DOM types for client-side code
-    "types": ["node", "jest"] // Add Node.js types if your project uses Node.js-specific features
+    // Performance Optimizations
+    "skipLibCheck": true,
+
+    // Path Resolution
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    //
+    "types": ["vitest/globals"]
   },
-
-  // ======== File Inclusion/Exclusion ========
-  "include": [
-    "__tests__/**/*", // Include all TypeScript files in the test folder
-    "scripts/**/*", // Include all TypeScript files in the scripts folder
-    "src/**/*" // Include all TypeScript files in the src folder
-  ],
-
-  "exclude": [
-    "node_modules", // Exclude the node_modules folder
-    "dist" // Exclude the dist folder (build output)
-  ]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

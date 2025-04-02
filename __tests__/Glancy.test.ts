@@ -9,9 +9,9 @@ describe('Glancy Storage Library', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   describe('Basic Storage Operations', () => {
@@ -81,11 +81,11 @@ describe('Glancy Storage Library', () => {
 
   describe('TTL Functionality', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     test('should expire items after TTL', async () => {
@@ -95,7 +95,7 @@ describe('Glancy Storage Library', () => {
       expect(initialResult.success).toBe(true);
       expect(initialResult.data).toBe('value');
 
-      jest.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(1100);
 
       const expiredResult = await storage.get('expiring');
       expect(expiredResult.success).toBe(true);
@@ -110,7 +110,7 @@ describe('Glancy Storage Library', () => {
       expect(initialResult.success).toBe(true);
       expect(initialResult.data).toBe('value');
 
-      jest.advanceTimersByTime(1100);
+      vi.advanceTimersByTime(1100);
 
       const expiredResult = await storage.get('defaultExpiring');
       expect(expiredResult.success).toBe(true);
@@ -120,17 +120,17 @@ describe('Glancy Storage Library', () => {
     test('should update TTL with touch', async () => {
       await storage.set('touching', 'value', 1000);
 
-      jest.advanceTimersByTime(500);
+      vi.advanceTimersByTime(500);
       const touchResult = await storage.touch('touching', 1000);
       expect(touchResult.success).toBe(true);
       expect(touchResult.data).toBe(true);
 
-      jest.advanceTimersByTime(700);
+      vi.advanceTimersByTime(700);
       const afterTouchResult = await storage.get('touching');
       expect(afterTouchResult.success).toBe(true);
       expect(afterTouchResult.data).toBe('value');
 
-      jest.advanceTimersByTime(400);
+      vi.advanceTimersByTime(400);
       const expiredResult = await storage.get('touching');
       expect(expiredResult.success).toBe(true);
       expect(expiredResult.data).toBeNull();
@@ -247,8 +247,8 @@ describe('Glancy Storage Library', () => {
 
     test('should handle storage quota exceeded', async () => {
       const originalSetItem = localStorage.setItem;
-      localStorage.setItem = jest.fn().mockImplementation(() => {
-        throw new Error('QuotaExceededError');
+      localStorage.setItem = vi.fn().mockImplementation(() => {
+        throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
       });
 
       const result = await storage.set('quota', 'x'.repeat(6 * 1024 * 1024));
