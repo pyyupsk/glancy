@@ -6,8 +6,8 @@
 
 - 🗂️ **Namespace Support**: All items are stored under a unique namespace.
 - ⏱️ **Time-to-Live (TTL)**: You can set an expiration time for stored items.
-- 🗜️ **Compression**: Supports LZW compression for optimizing storage space.
-- 🔒 **Encryption**: AES encryption for secure storage of sensitive data.
+- 🗜️ **Compression**: Built-in gzip compression for optimizing storage space.
+- 🔒 **Encryption**: AES-256-GCM encryption with PBKDF2 key derivation for secure storage of sensitive data.
 - ⚠️ **Error Handling**: Graceful error handling with custom error classes.
 - 📦 **Batch Operations**: Methods to get/set multiple items in a single operation.
 - 🛡️ **Storage Integrity**: Validations and checks to ensure safe storage usage.
@@ -37,11 +37,15 @@ Easily set, get, and remove items:
 ```typescript
 const storage = new Glancy({ namespace: 'my_app' });
 
+interface MyData {
+  value: string;
+}
+
 // 🔑 Set a value
-storage.set('my_key', { value: 'Hello, world!' }, 60000); // TTL of 1 minute
+await storage.set<MyData>('my_key', { value: 'Hello, world!' }, 60000); // TTL of 1 minute
 
 // 🔍 Get a value
-const data = storage.get<{ value: string }>('my_key');
+const { data } = await storage.get<MyData>('my_key');
 console.log(data?.value); // Outputs: Hello, world!
 
 // 🗑️ Remove a value
@@ -63,14 +67,23 @@ const storage = new Glancy({
     key: 'my-secret-key',
   },
   compress: true, // 🗜️ Enable compression
+  compressionLevel: 6, // Optional: Set compression level (0-9)
 });
 
-// Set a value securely
-storage.set('secure_key', { value: 'Sensitive Information' }, 60000);
+interface SecureData {
+  value: string;
+}
 
-// Retrieve the secure value
-const result = storage.get<{ value: string }>('secure_key');
-console.log(result?.value); // Outputs: Sensitive Information
+// 🔑 Set a value securely
+await storage.set<SecureData>(
+  'secure_key',
+  { value: 'Sensitive Information' },
+  60000
+);
+
+// 🔍 Retrieve the secure value
+const { data } = await storage.get<SecureData>('secure_key');
+console.log(data?.value); // Outputs: Sensitive Information
 ```
 
 > 🔧 **Tip**: You can generate a secure key using `openssl` by running `openssl rand -base64 32`
@@ -80,15 +93,19 @@ console.log(result?.value); // Outputs: Sensitive Information
 Perform operations on multiple keys at once:
 
 ```typescript
-// Set multiple items
-storage.setMany({
+interface MyData {
+  value: string;
+}
+
+// 🔑 Set multiple items
+await storage.setMany<MyData>({
   key1: { value: 'value1' },
   key2: { value: 'value2' },
 });
 
-// Get multiple items
-const values = storage.getMany(['key1', 'key2']);
-console.log(values['key1']); // Outputs: value1
+// 🔍 Get multiple items
+const { data } = await storage.getMany<MyData>(['key1', 'key2']);
+console.log(data['key1']); // Outputs: value1
 ```
 
 ### ⏳ Expiration (TTL)
@@ -96,10 +113,10 @@ console.log(values['key1']); // Outputs: value1
 Store items with a lifespan:
 
 ```typescript
-storage.set('temporary_data', { value: 'Expires Soon' }, 5000); // Expires in 5 seconds
+await storage.set('temporary_data', { value: 'Expires Soon' }, 5000); // Expires in 5 seconds
 
-setTimeout(() => {
-  const data = storage.get('temporary_data');
+setTimeout(async () => {
+  const data = await storage.get('temporary_data');
   console.log(data); // Should be null after 5 seconds
 }, 6000);
 ```
@@ -108,59 +125,79 @@ setTimeout(() => {
 
 ### 📦 Class Options
 
-| Option           | Description                                         | Default                       |
-| ---------------- | --------------------------------------------------- | ----------------------------- |
-| `namespace`      | A unique identifier for the storage namespace.      | `glancy`                      |
-| `encryption`     | An object containing encryption configuration.      | `{ enabled: false, key: '' }` |
-| `defaultTTL`     | The default TTL (in milliseconds) for stored items. | `null`                        |
-| `compress`       | Whether to enable compression for stored items.     | `false`                       |
-| `dictionarySize` | The size of the compression dictionary.             | `4096`                        |
+| Option             | Description                                         | Default                       |
+| ------------------ | --------------------------------------------------- | ----------------------------- |
+| `namespace`        | A unique identifier for the storage namespace.      | `glancy`                      |
+| `encryption`       | An object containing encryption configuration.      | `{ enabled: false, key: '' }` |
+| `defaultTTL`       | The default TTL (in milliseconds) for stored items. | `null`                        |
+| `compress`         | Whether to enable compression for stored items.     | `false`                       |
+| `compressionLevel` | The gzip compression level (0-9).                   | `6`                           |
 
 ### ⚙️ Methods
 
-#### `get<T>(key: string): T | null`
+#### `get<T>(key: string): Promise<GlancyResponse<T>>`
 
-Retrieves a value. Returns `null` if the key doesn’t exist or has expired.
+Retrieves a value. Returns `null` if the key doesn't exist or has expired.
 
-#### `set(key: string, value: T, ttl?: number): void`
+#### `set(key: string, value: T, ttl?: number): Promise<GlancyResponse<void>>`
 
 Stores a value with an optional TTL.
 
-#### `getMany<T>(keys: string[]): Record<string, T | null>`
+#### `getMany<T>(keys: string[]): Promise<GlancyResponse<Record<string, T | null>>>`
 
 Retrieves multiple values at once.
 
-#### `setMany<T>(values: Record<string, T>, ttl?: number): void`
+#### `setMany<T>(values: Record<string, T>, ttl?: number): Promise<GlancyResponse<void>>`
 
 Stores multiple values at once.
 
-#### `remove(key: string): void`
+#### `remove(key: string): GlancyResponse<void>`
 
 Deletes an item from storage.
 
-#### `clear(): void`
+#### `clear(): GlancyResponse<void>`
 
 Removes all items in the current namespace.
 
-#### `keys(): string[]`
+#### `keys(): GlancyResponse<string[]>`
 
 Lists all keys in the namespace.
 
-#### `has(key: string): boolean`
+#### `has(key: string): Promise<GlancyResponse<boolean>>`
 
 Checks if a key exists and is not expired.
 
-#### `touch(key: string, ttl?: number): boolean`
+#### `touch(key: string, ttl?: number): Promise<GlancyResponse<boolean>>`
 
 Updates the TTL for an existing item.
 
-#### `getTTL(key: string): number | null`
+#### `getTTL(key: string): Promise<GlancyResponse<number | null>>`
 
 Gets the remaining TTL for a key.
 
-#### `size(): number`
+#### `size(): GlancyResponse<number>`
 
 Calculates the total size (in bytes) of all items in the namespace.
+
+### 📚 Types Reference
+
+#### `GlancyResponse<T>`
+
+Represents the response from a storage operation.
+
+| Property  | Description                                     |
+| --------- | ----------------------------------------------- |
+| `success` | Indicates whether the operation was successful. |
+| `message` | A message associated with the response.         |
+| `data`    | The data returned by the operation.             |
+
+```typescript
+interface GlancyResponse<T> {
+  success: boolean;
+  message: string;
+  data: T | null | undefined;
+}
+```
 
 ---
 
