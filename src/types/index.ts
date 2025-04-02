@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import type { CompressionMeta } from '../compression/types';
-
 export interface GlancyOptions {
   namespace?: string;
   encryption?: {
@@ -24,20 +22,29 @@ export interface GlancyOptions {
   };
   defaultTTL?: number;
   compress?: boolean;
-  dictionarySize?: number;
+  compressionLevel?: number;
 }
 
 export interface GlancyItem<T> {
-  value: T | null;
+  value: T;
   timestamp: number;
   ttl?: number;
-  version?: number;
-  compressionMeta?: CompressionMeta;
+}
+
+export interface GlancyResponse<T> {
+  success: boolean;
+  message: string;
+  data: T | null | undefined;
 }
 
 export interface IStorage {
-  get<T>(key: string): T | null;
-  set<T>(key: string, value: T, ttl?: number): void;
-  remove(key: string): void;
-  clear(): void;
+  get<T>(key: string): Promise<GlancyResponse<T>>;
+  set<T>(key: string, value: T, ttl?: number): Promise<GlancyResponse<void>>;
+  remove(key: string): GlancyResponse<void>;
+  clear(): GlancyResponse<void>;
+  keys(): GlancyResponse<string[]>;
+  has(key: string): Promise<GlancyResponse<boolean>>;
+  touch(key: string, ttl?: number): Promise<GlancyResponse<boolean>>;
+  getTTL(key: string): Promise<GlancyResponse<number | null>>;
+  size(): GlancyResponse<number>;
 }

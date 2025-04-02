@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import type { GlancyOptions, GlancyItem } from '../types';
+import type { GlancyOptions, GlancyItem, GlancyResponse } from '../types';
 
 import { LZWCompressor } from '../compression/LZWCompressor';
 import { AESEncryption } from '../encryption/AESEncryption';
-import { GlancyError } from '../utils/errors';
 import { validateStorageKey, validateTTL } from '../utils/validators';
 import { BaseStorage } from './BaseStorage';
 
@@ -33,7 +32,7 @@ export class Glancy extends BaseStorage {
 
     if (options.compress) {
       this.compression = new LZWCompressor({
-        dictionarySize: options.dictionarySize || 4096,
+        compressionLevel: options.compressionLevel || 6,
       });
     }
 
@@ -49,12 +48,25 @@ export class Glancy extends BaseStorage {
    * @param key The key of the item to retrieve
    * @returns The value associated with the key or null if not found or expired
    */
-  public get<T>(key: string): T | null {
+  public async get<T>(key: string): Promise<GlancyResponse<T>> {
     try {
-      validateStorageKey(key);
+      const keyValidation = validateStorageKey(key);
+      if (!keyValidation.success) {
+        return {
+          success: false,
+          message: keyValidation.message,
+          data: null,
+        };
+      }
 
       const rawData = localStorage.getItem(this.getNamespacedKey(key));
-      if (!rawData) return null;
+      if (!rawData) {
+        return {
+          success: true,
+          message: 'Item not found',
+          data: null,
+        };
+      }
 
       let data = rawData;
       if (this.encryption) {
@@ -62,24 +74,38 @@ export class Glancy extends BaseStorage {
       }
 
       if (this.compression) {
-        data = this.compression?.decompressData(data);
+        data = await this.compression.decompressData(data);
       }
 
       const item: GlancyItem<T> = JSON.parse(data);
       if (!item || typeof item.value === 'undefined') {
-        this.handleError(`Invalid item for key ${key}`, null);
-        return null;
+        return {
+          success: false,
+          message: `Invalid item for key ${key}`,
+          data: null,
+        };
       }
 
       if (this.isExpired(item)) {
         this.remove(key);
-        return null;
+        return {
+          success: true,
+          message: 'Item expired',
+          data: null,
+        };
       }
 
-      return item.value;
+      return {
+        success: true,
+        message: 'Item retrieved successfully',
+        data: item.value,
+      };
     } catch (error) {
-      this.handleError('Error getting item', error);
-      return null;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error getting item',
+        data: null,
+      };
     }
   }
 
@@ -89,22 +115,40 @@ export class Glancy extends BaseStorage {
    * @param value The value to store
    * @param ttl Optional time-to-live for the item
    */
-  public set<T>(key: string, value: T, ttl?: number): void {
+  public async set<T>(
+    key: string,
+    value: T,
+    ttl?: number
+  ): Promise<GlancyResponse<void>> {
     try {
-      validateStorageKey(key);
-      validateTTL(ttl);
+      const keyValidation = validateStorageKey(key);
+      if (!keyValidation.success) {
+        return {
+          success: false,
+          message: keyValidation.message,
+          data: undefined,
+        };
+      }
+
+      const ttlValidation = validateTTL(ttl);
+      if (!ttlValidation.success) {
+        return {
+          success: false,
+          message: ttlValidation.message,
+          data: undefined,
+        };
+      }
 
       const item: GlancyItem<T> = {
-        value: value === null || value === undefined ? null : value,
+        value: value ?? ({} as T),
         timestamp: Date.now(),
         ttl: ttl || this.defaultTTL,
-        version: 1,
       };
 
       let serializedData = JSON.stringify(item);
 
       if (this.compression) {
-        serializedData = this.compression.compressData(serializedData);
+        serializedData = await this.compression.compressData(serializedData);
       }
 
       if (this.encryption) {
@@ -113,18 +157,27 @@ export class Glancy extends BaseStorage {
 
       try {
         localStorage.setItem(this.getNamespacedKey(key), serializedData);
+        return {
+          success: true,
+          message: 'Item set successfully',
+          data: undefined,
+        };
       } catch (error) {
-        if (error instanceof Error) {
-          if (error.name === 'QuotaExceededError') {
-            throw new GlancyError('Storage quota exceeded');
-          } else {
-            throw error;
-          }
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+          return {
+            success: false,
+            message: 'Storage quota exceeded',
+            data: undefined,
+          };
         }
         throw error;
       }
     } catch (error) {
-      this.handleError('Error setting item', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error setting item',
+        data: undefined,
+      };
     }
   }
 
@@ -133,14 +186,34 @@ export class Glancy extends BaseStorage {
    * @param keys An array of keys to retrieve
    * @returns An object mapping keys to their values or null if not found
    */
-  public getMany<T>(keys: string[]): Record<string, T | null> {
-    return keys.reduce(
-      (acc, key) => {
-        acc[key] = this.get<T>(key);
-        return acc;
-      },
-      {} as Record<string, T | null>
-    );
+  public async getMany<T>(
+    keys: string[]
+  ): Promise<GlancyResponse<Record<string, T | null>>> {
+    try {
+      const result = await Promise.all(
+        keys.map(async (key) => {
+          const response = await this.get<T>(key);
+          return [key, response.success ? response.data : null];
+        })
+      );
+
+      const data = Object.fromEntries(result);
+
+      return {
+        success: true,
+        message: 'Items retrieved successfully',
+        data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error getting multiple items',
+        data: null,
+      };
+    }
   }
 
   /**
@@ -148,39 +221,105 @@ export class Glancy extends BaseStorage {
    * @param items An object mapping keys to values
    * @param ttl Optional time-to-live for the items
    */
-  public setMany<T>(items: Record<string, T>, ttl?: number): void {
-    Object.entries(items).forEach(([key, value]) => {
-      this.set(key, value, ttl);
-    });
+  public async setMany<T>(
+    items: Record<string, T>,
+    ttl?: number
+  ): Promise<GlancyResponse<void>> {
+    try {
+      Object.entries(items).forEach(async ([key, value]) => {
+        await this.set(key, value, ttl);
+      });
+      return {
+        success: true,
+        message: 'Items set successfully',
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error setting multiple items',
+        data: undefined,
+      };
+    }
   }
 
   /**
    * Removes an item from storage
    * @param key The key of the item to remove
    */
-  public remove(key: string): void {
-    validateStorageKey(key);
+  public remove(key: string): GlancyResponse<void> {
+    try {
+      const keyValidation = validateStorageKey(key);
+      if (!keyValidation.success) {
+        return {
+          success: false,
+          message: keyValidation.message,
+          data: undefined,
+        };
+      }
 
-    localStorage.removeItem(this.getNamespacedKey(key));
+      localStorage.removeItem(this.getNamespacedKey(key));
+      return {
+        success: true,
+        message: 'Item removed successfully',
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error removing item',
+        data: undefined,
+      };
+    }
   }
 
   /**
    * Clears all items in the current namespace
    */
-  public clear(): void {
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith(this.namespace))
-      .forEach((key) => localStorage.removeItem(key));
+  public clear(): GlancyResponse<void> {
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith(this.namespace))
+        .forEach((key) => localStorage.removeItem(key));
+      return {
+        success: true,
+        message: 'Storage cleared successfully',
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Error clearing storage',
+        data: undefined,
+      };
+    }
   }
 
   /**
    * Gets all keys in the current namespace
    * @returns An array of keys in the current namespace
    */
-  public keys(): string[] {
-    return Object.keys(localStorage)
-      .filter((key) => key.startsWith(this.namespace))
-      .map((key) => key.replace(`${this.namespace}:`, ''));
+  public keys(): GlancyResponse<string[]> {
+    try {
+      const keys = Object.keys(localStorage)
+        .filter((key) => key.startsWith(this.namespace))
+        .map((key) => key.replace(`${this.namespace}:`, ''));
+      return {
+        success: true,
+        message: 'Keys retrieved successfully',
+        data: keys,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error getting keys',
+        data: null,
+      };
+    }
   }
 
   /**
@@ -188,8 +327,24 @@ export class Glancy extends BaseStorage {
    * @param key The key to check
    * @returns True if the key exists and is not expired, otherwise false
    */
-  public has(key: string): boolean {
-    return this.get(key) !== null;
+  public async has(key: string): Promise<GlancyResponse<boolean>> {
+    try {
+      const response = await this.get(key);
+      return {
+        success: true,
+        message: 'Key check completed successfully',
+        data: response.success && response.data !== null,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Error checking key existence',
+        data: false,
+      };
+    }
   }
 
   /**
@@ -198,13 +353,37 @@ export class Glancy extends BaseStorage {
    * @param ttl Optional new time-to-live for the item
    * @returns True if the TTL was updated, otherwise false
    */
-  public touch(key: string, ttl?: number): boolean {
+  public async touch(
+    key: string,
+    ttl?: number
+  ): Promise<GlancyResponse<boolean>> {
     try {
-      validateStorageKey(key);
-      validateTTL(ttl);
+      const keyValidation = validateStorageKey(key);
+      if (!keyValidation.success) {
+        return {
+          success: false,
+          message: keyValidation.message,
+          data: false,
+        };
+      }
+
+      const ttlValidation = validateTTL(ttl);
+      if (!ttlValidation.success) {
+        return {
+          success: false,
+          message: ttlValidation.message,
+          data: false,
+        };
+      }
 
       const rawData = localStorage.getItem(this.getNamespacedKey(key));
-      if (!rawData) return false;
+      if (!rawData) {
+        return {
+          success: true,
+          message: 'Item not found',
+          data: false,
+        };
+      }
 
       let data = rawData;
       if (this.encryption) {
@@ -212,7 +391,7 @@ export class Glancy extends BaseStorage {
       }
 
       if (this.compression) {
-        data = this.compression?.decompressData(data);
+        data = await this.compression?.decompressData(data);
       }
 
       const item: GlancyItem<unknown> = JSON.parse(data);
@@ -222,7 +401,7 @@ export class Glancy extends BaseStorage {
       let serializedData = JSON.stringify(item);
 
       if (this.compression) {
-        serializedData = this.compression.compressData(serializedData);
+        serializedData = await this.compression.compressData(serializedData);
       }
 
       if (this.encryption) {
@@ -230,10 +409,17 @@ export class Glancy extends BaseStorage {
       }
 
       localStorage.setItem(this.getNamespacedKey(key), serializedData);
-      return true;
+      return {
+        success: true,
+        message: 'TTL updated successfully',
+        data: true,
+      };
     } catch (error) {
-      this.handleError('Error updating TTL', error);
-      return false;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error updating TTL',
+        data: false,
+      };
     }
   }
 
@@ -242,12 +428,25 @@ export class Glancy extends BaseStorage {
    * @param key The key of the item to check
    * @returns The remaining TTL in milliseconds or null if not found
    */
-  public getTTL(key: string): number | null {
+  public async getTTL(key: string): Promise<GlancyResponse<number | null>> {
     try {
-      validateStorageKey(key);
+      const keyValidation = validateStorageKey(key);
+      if (!keyValidation.success) {
+        return {
+          success: false,
+          message: keyValidation.message,
+          data: null,
+        };
+      }
 
       const rawData = localStorage.getItem(this.getNamespacedKey(key));
-      if (!rawData) return null;
+      if (!rawData) {
+        return {
+          success: true,
+          message: 'Item not found',
+          data: null,
+        };
+      }
 
       let data = rawData;
       if (this.encryption) {
@@ -255,16 +454,29 @@ export class Glancy extends BaseStorage {
       }
 
       if (this.compression) {
-        data = this.compression?.decompressData(data);
+        data = await this.compression?.decompressData(data);
       }
 
       const item: GlancyItem<unknown> = JSON.parse(data);
-      if (!item.ttl) return null;
+      if (!item.ttl) {
+        return {
+          success: true,
+          message: 'Item has no TTL',
+          data: null,
+        };
+      }
 
-      return item.ttl - (Date.now() - item.timestamp);
+      return {
+        success: true,
+        message: 'TTL retrieved successfully',
+        data: item.ttl - (Date.now() - item.timestamp),
+      };
     } catch (error) {
-      this.handleError('Error getting TTL', error);
-      return null;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error getting TTL',
+        data: null,
+      };
     }
   }
 
@@ -272,16 +484,29 @@ export class Glancy extends BaseStorage {
    * Returns the total size of all items in the namespace in bytes
    * @returns The total size in bytes
    */
-  public size(): number {
-    let totalSize = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(this.namespace)) {
-        const value = localStorage.getItem(key);
-        totalSize += key.length + (value?.length ?? 0);
+  public size(): GlancyResponse<number> {
+    try {
+      let totalSize = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(this.namespace)) {
+          const value = localStorage.getItem(key);
+          totalSize += key.length + (value?.length ?? 0);
+        }
       }
+      return {
+        success: true,
+        message: 'Size calculated successfully',
+        data: totalSize,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Error calculating size',
+        data: 0,
+      };
     }
-    return totalSize;
   }
 
   protected getNamespacedKey(key: string): string {
@@ -291,12 +516,5 @@ export class Glancy extends BaseStorage {
   protected isExpired(item: GlancyItem<unknown>): boolean {
     if (!item.ttl) return false;
     return Date.now() > item.timestamp + item.ttl;
-  }
-
-  private handleError(message: string, error: unknown): void {
-    if (error instanceof GlancyError) {
-      throw new GlancyError(`${message}: ${error.message}`);
-    }
-    throw new GlancyError(message);
   }
 }

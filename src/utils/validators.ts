@@ -14,16 +14,34 @@
  * limitations under the License.
  */
 
-import { GlancyError } from './errors';
+import type { GlancyResponse } from '../types';
 
-export function validateStorageKey(key: string): void {
+export function validateStorageKey(key: string): GlancyResponse<void> {
   if (!key || typeof key !== 'string') {
-    throw new GlancyError('Invalid storage key');
+    return {
+      success: false,
+      message: 'Invalid storage key',
+      data: undefined,
+    };
   }
+  return {
+    success: true,
+    message: 'Storage key is valid',
+    data: undefined,
+  };
 }
 
-export function validateTTL(ttl?: number): void {
+export function validateTTL(ttl?: number): GlancyResponse<void> {
   if (ttl !== undefined && (!Number.isInteger(ttl) || ttl < 0)) {
-    throw new GlancyError('Invalid TTL value');
+    return {
+      success: false,
+      message: 'Invalid TTL value',
+      data: undefined,
+    };
   }
+  return {
+    success: true,
+    message: 'TTL is valid',
+    data: undefined,
+  };
 }

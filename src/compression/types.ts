@@ -15,12 +15,12 @@
  */
 
 export interface CompressionOptions {
-  dictionarySize: number;
+  compressionLevel?: number; // 0-9, where 9 is maximum compression
 }
 
 export interface CompressionMeta {
   originalSize: number;
   compressedSize: number;
   algorithm: string;
-  dictionarySize: number;
+  level: number;
 }

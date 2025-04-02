@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IStorage, GlancyOptions, GlancyItem } from '../types';
+import type { IStorage, GlancyOptions, GlancyResponse } from '../types';
 
 export abstract class BaseStorage implements IStorage {
   protected readonly namespace: string;
@@ -24,17 +24,26 @@ export abstract class BaseStorage implements IStorage {
       options.namespace || process.env.GLANCY_NAMESPACE || 'glancy';
   }
 
-  abstract get<T>(key: string): T | null;
-  abstract set<T>(key: string, value: T, ttl?: number): void;
-  abstract remove(key: string): void;
-  abstract clear(): void;
+  abstract get<T>(key: string): Promise<GlancyResponse<T>>;
+  abstract set<T>(
+    key: string,
+    value: T,
+    ttl?: number
+  ): Promise<GlancyResponse<void>>;
+  abstract remove(key: string): GlancyResponse<void>;
+  abstract clear(): GlancyResponse<void>;
+  abstract keys(): GlancyResponse<string[]>;
+  abstract has(key: string): Promise<GlancyResponse<boolean>>;
+  abstract touch(key: string, ttl?: number): Promise<GlancyResponse<boolean>>;
+  abstract getTTL(key: string): Promise<GlancyResponse<number | null>>;
+  abstract size(): GlancyResponse<number>;
 
   protected getNamespacedKey(key: string): string {
     return `${this.namespace}:${key}`;
   }
 
-  protected isExpired(item: GlancyItem<unknown>): boolean {
+  protected isExpired(item: { timestamp: number; ttl?: number }): boolean {
     if (!item.ttl) return false;
-    return Date.now() > item.timestamp + item.ttl;
+    return Date.now() - item.timestamp > item.ttl;
   }
 }
