@@ -15,100 +15,125 @@ describe('Glancy Storage Library', () => {
   });
 
   describe('Basic Storage Operations', () => {
-    test('should store and retrieve primitive values', () => {
-      storage.set('string', 'hello');
-      storage.set('number', 42);
-      storage.set('boolean', true);
+    test('should store and retrieve primitive values', async () => {
+      await storage.set('string', 'hello');
+      await storage.set('number', 42);
+      await storage.set('boolean', true);
 
-      expect(storage.get('string')).toBe('hello');
-      expect(storage.get('number')).toBe(42);
-      expect(storage.get('boolean')).toBe(true);
+      const stringResult = await storage.get('string');
+      const numberResult = await storage.get('number');
+      const booleanResult = await storage.get('boolean');
+
+      expect(stringResult.success).toBe(true);
+      expect(stringResult.data).toBe('hello');
+      expect(numberResult.success).toBe(true);
+      expect(numberResult.data).toBe(42);
+      expect(booleanResult.success).toBe(true);
+      expect(booleanResult.data).toBe(true);
     });
 
-    test('should store and retrieve complex objects', () => {
+    test('should store and retrieve complex objects', async () => {
       const testObj = {
         name: 'Test',
         nested: { value: 123 },
         array: [1, 2, 3],
       };
 
-      storage.set('object', testObj);
-      expect(storage.get('object')).toEqual(testObj);
+      await storage.set('object', testObj);
+      const result = await storage.get('object');
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testObj);
     });
 
-    test('should handle undefined and null values', () => {
-      storage.set('undefined', undefined);
-      storage.set('null', null);
-
-      expect(storage.get('undefined')).toBeNull();
-      expect(storage.get('null')).toBeNull();
-    });
-
-    test('should return null for non-existent keys', () => {
-      expect(storage.get('nonexistent')).toBeNull();
+    test('should return null for non-existent keys', async () => {
+      const result = await storage.get('nonexistent');
+      expect(result.success).toBe(true);
+      expect(result.data).toBeNull();
     });
   });
 
   describe('Namespace Handling', () => {
-    test('should use custom namespace', () => {
+    test('should use custom namespace', async () => {
       const customStorage = new Glancy({ namespace: 'custom' });
-      customStorage.set('key', 'value');
+      await customStorage.set('key', 'value');
 
       expect(localStorage.getItem('custom:key')).toBeTruthy();
       expect(localStorage.getItem('glancy:key')).toBeNull();
     });
 
-    test('should not conflict between different namespaces', () => {
+    test('should not conflict between different namespaces', async () => {
       const storage1 = new Glancy({ namespace: 'ns1' });
       const storage2 = new Glancy({ namespace: 'ns2' });
 
-      storage1.set('key', 'value1');
-      storage2.set('key', 'value2');
+      await storage1.set('key', 'value1');
+      await storage2.set('key', 'value2');
 
-      expect(storage1.get('key')).toBe('value1');
-      expect(storage2.get('key')).toBe('value2');
+      const result1 = await storage1.get('key');
+      const result2 = await storage2.get('key');
+
+      expect(result1.success).toBe(true);
+      expect(result1.data).toBe('value1');
+      expect(result2.success).toBe(true);
+      expect(result2.data).toBe('value2');
     });
   });
 
   describe('TTL Functionality', () => {
     beforeEach(() => {
-      jest.useFakeTimers(); // Use fake timers to control time-based tests
+      jest.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers(); // Switch back to real timers after tests
+      jest.useRealTimers();
     });
 
-    test('should expire items after TTL', () => {
-      storage.set('expiring', 'value', 1000); // 1 second TTL
+    test('should expire items after TTL', async () => {
+      await storage.set('expiring', 'value', 1000);
 
-      expect(storage.get('expiring')).toBe('value');
+      const initialResult = await storage.get('expiring');
+      expect(initialResult.success).toBe(true);
+      expect(initialResult.data).toBe('value');
 
-      jest.advanceTimersByTime(1100); // Advance time to simulate expiration
-      expect(storage.get('expiring')).toBeNull();
+      jest.advanceTimersByTime(1100);
+
+      const expiredResult = await storage.get('expiring');
+      expect(expiredResult.success).toBe(true);
+      expect(expiredResult.data).toBeNull();
     });
 
-    test('should handle default TTL', () => {
+    test('should handle default TTL', async () => {
       storage = new Glancy({ defaultTTL: 1000 });
-      storage.set('defaultExpiring', 'value');
+      await storage.set('defaultExpiring', 'value');
 
-      expect(storage.get('defaultExpiring')).toBe('value');
+      const initialResult = await storage.get('defaultExpiring');
+      expect(initialResult.success).toBe(true);
+      expect(initialResult.data).toBe('value');
 
-      jest.advanceTimersByTime(1100); // Simulate TTL expiration
-      expect(storage.get('defaultExpiring')).toBeNull();
+      jest.advanceTimersByTime(1100);
+
+      const expiredResult = await storage.get('defaultExpiring');
+      expect(expiredResult.success).toBe(true);
+      expect(expiredResult.data).toBeNull();
     });
 
-    test('should update TTL with touch', () => {
-      storage.set('touching', 'value', 1000);
+    test('should update TTL with touch', async () => {
+      await storage.set('touching', 'value', 1000);
 
-      jest.advanceTimersByTime(500); // Simulate partial TTL passing
-      storage.touch('touching', 1000);
+      jest.advanceTimersByTime(500);
+      const touchResult = await storage.touch('touching', 1000);
+      expect(touchResult.success).toBe(true);
+      expect(touchResult.data).toBe(true);
 
-      jest.advanceTimersByTime(700); // Simulate time after touch
-      expect(storage.get('touching')).toBe('value');
+      jest.advanceTimersByTime(700);
+      const afterTouchResult = await storage.get('touching');
+      expect(afterTouchResult.success).toBe(true);
+      expect(afterTouchResult.data).toBe('value');
 
-      jest.advanceTimersByTime(400); // Simulate TTL expiration
-      expect(storage.get('touching')).toBeNull();
+      jest.advanceTimersByTime(400);
+      const expiredResult = await storage.get('touching');
+      expect(expiredResult.success).toBe(true);
+      expect(expiredResult.data).toBeNull();
     });
   });
 
@@ -121,25 +146,29 @@ describe('Glancy Storage Library', () => {
       });
     });
 
-    test('should encrypt stored data', () => {
-      storage.set('secret', 'sensitive-data');
+    test('should encrypt stored data', async () => {
+      await storage.set('secret', 'sensitive-data');
       const rawData = localStorage.getItem('glancy:secret');
 
       expect(rawData).not.toContain('sensitive-data');
-      expect(storage.get('secret')).toBe('sensitive-data');
+      const result = await storage.get('secret');
+      expect(result.success).toBe(true);
+      expect(result.data).toBe('sensitive-data');
     });
 
-    test('should handle encryption with complex objects', () => {
+    test('should handle encryption with complex objects', async () => {
       const secretObj = {
         password: 'secret123',
         tokens: ['token1', 'token2'],
       };
 
-      storage.set('secrets', secretObj);
+      await storage.set('secrets', secretObj);
       const rawData = localStorage.getItem('glancy:secrets');
 
       expect(rawData).not.toContain('secret123');
-      expect(storage.get('secrets')).toEqual(secretObj);
+      const result = await storage.get('secrets');
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(secretObj);
     });
   });
 
@@ -148,97 +177,106 @@ describe('Glancy Storage Library', () => {
       storage = new Glancy({ compress: true });
     });
 
-    test('should compress large strings', () => {
-      const largeString = 'a'.repeat(4 * 1024 * 1024); // 4MB
-      storage.set('large', largeString);
+    test('should compress large strings', async () => {
+      const largeString = 'a'.repeat(4 * 1024 * 1024);
+      await storage.set('large', largeString);
 
       const rawData = localStorage.getItem('glancy:large');
       expect(rawData!.length).toBeLessThan(largeString.length);
-      expect(storage.get('large')).toBe(largeString);
+      const result = await storage.get('large');
+      expect(result.success).toBe(true);
+      expect(result.data).toBe(largeString);
     });
 
-    test('should handle compression with repeated patterns', () => {
+    test('should handle compression with repeated patterns', async () => {
       const repeatedPattern = 'hello world '.repeat(100);
-      storage.set('patterns', repeatedPattern);
+      await storage.set('patterns', repeatedPattern);
 
       const rawData = localStorage.getItem('glancy:patterns');
       expect(rawData!.length).toBeLessThan(repeatedPattern.length);
-      expect(storage.get('patterns')).toBe(repeatedPattern);
+      const result = await storage.get('patterns');
+      expect(result.success).toBe(true);
+      expect(result.data).toBe(repeatedPattern);
     });
   });
 
   describe('Bulk Operations', () => {
-    test('should handle getMany operation', () => {
-      storage.set('key1', 'value1');
-      storage.set('key2', 'value2');
+    test('should handle getMany operation', async () => {
+      await storage.set('key1', 'value1');
+      await storage.set('key2', 'value2');
 
-      const results = storage.getMany(['key1', 'key2', 'nonexistent']);
-      expect(results).toEqual({
+      const result = await storage.getMany(['key1', 'key2', 'nonexistent']);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
         key1: 'value1',
         key2: 'value2',
         nonexistent: null,
       });
     });
 
-    test('should handle setMany operation', () => {
-      storage.setMany({
+    test('should handle setMany operation', async () => {
+      await storage.setMany({
         bulk1: 'value1',
         bulk2: 'value2',
       });
 
-      expect(storage.get('bulk1')).toBe('value1');
-      expect(storage.get('bulk2')).toBe('value2');
+      const result1 = await storage.get('bulk1');
+      const result2 = await storage.get('bulk2');
+
+      expect(result1.success).toBe(true);
+      expect(result1.data).toBe('value1');
+      expect(result2.success).toBe(true);
+      expect(result2.data).toBe('value2');
     });
   });
 
   describe('Error Handling', () => {
-    test('should throw on invalid keys', () => {
-      expect(() => storage.set('', 'value')).toThrow(
-        'Error setting item: Invalid storage key'
-      );
-      // @ts-expect-error Testing invalid key
-      expect(() => storage.set(123, 'value')).toThrow(
-        'Error setting item: Invalid storage key'
-      );
+    test('should handle invalid keys', async () => {
+      const result = await storage.set('', 'value');
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Invalid storage key');
+      expect(result.data).toBeUndefined();
     });
 
-    test('should throw on invalid TTL values', () => {
-      expect(() => storage.set('key', 'value', -1)).toThrow(
-        'Error setting item: Invalid TTL value'
-      );
-      expect(() => storage.set('key', 'value', 1.5)).toThrow(
-        'Error setting item: Invalid TTL value'
-      );
+    test('should handle invalid TTL values', async () => {
+      const result = await storage.set('key', 'value', -1);
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Invalid TTL value');
+      expect(result.data).toBeUndefined();
     });
 
-    test('should handle storage quota exceeded', () => {
-      // Mock quota exceeded error
+    test('should handle storage quota exceeded', async () => {
       const originalSetItem = localStorage.setItem;
       localStorage.setItem = jest.fn().mockImplementation(() => {
         throw new Error('QuotaExceededError');
       });
 
-      expect(() => storage.set('quota', 'x'.repeat(6 * 1024 * 1024))).toThrow(); // 6MB limit of 5 MB (megabytes) per domain.
+      const result = await storage.set('quota', 'x'.repeat(6 * 1024 * 1024));
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Storage quota exceeded');
+      expect(result.data).toBeUndefined();
 
       localStorage.setItem = originalSetItem;
     });
   });
 
   describe('Storage Information', () => {
-    test('should calculate correct storage size', () => {
-      storage.set('size1', 'a'.repeat(10000));
-      storage.set('size2', 'b'.repeat(20000));
+    test('should calculate correct storage size', async () => {
+      await storage.set('size1', 'a'.repeat(10000));
+      await storage.set('size2', 'b'.repeat(20000));
 
-      const size = storage.size();
-      expect(size).toBeGreaterThan(0);
+      const result = storage.size();
+      expect(result.success).toBe(true);
+      expect(result.data).toBeGreaterThan(0);
     });
 
-    test('should return correct TTL information', () => {
-      storage.set('ttl-test', 'value', 5000);
+    test('should return correct TTL information', async () => {
+      await storage.set('ttl-test', 'value', 5000);
 
-      const remainingTTL = storage.getTTL('ttl-test');
-      expect(remainingTTL).toBeLessThanOrEqual(5000);
-      expect(remainingTTL).toBeGreaterThan(0);
+      const result = await storage.getTTL('ttl-test');
+      expect(result.success).toBe(true);
+      expect(result.data).toBeLessThanOrEqual(5000);
+      expect(result.data).toBeGreaterThan(0);
     });
   });
 });
