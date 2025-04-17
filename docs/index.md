@@ -5,15 +5,18 @@ Welcome to the Glancy documentation! This guide will help you understand and use
 ## Table of Contents
 
 ### Getting Started
+
 - [Guide Overview](guide/index.md)
 - [Advanced Usage](guide/advanced.md)
 
 ### API Reference
+
 - [API Overview](api/index.md)
 - [Glancy API](api/glancy.md)
 - [Types Reference](api/types.md)
 
 ### Examples
+
 - [Basic Usage](examples/basic.md)
 - [Compression](examples/compression.md)
 - [Encryption](examples/encryption.md)
