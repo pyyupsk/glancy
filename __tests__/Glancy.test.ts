@@ -158,14 +158,14 @@ describe('Glancy Storage Library', () => {
 
     test('should handle encryption with complex objects', async () => {
       const secretObj = {
-        password: 'secret123',
+        password: 'test-password-123',
         tokens: ['token1', 'token2'],
       };
 
       await storage.set('secrets', secretObj);
       const rawData = localStorage.getItem('glancy:secrets');
 
-      expect(rawData).not.toContain('secret123');
+      expect(rawData).not.toContain('test-password-123');
       const result = await storage.get('secrets');
       expect(result.success).toBe(true);
       expect(result.data).toEqual(secretObj);
