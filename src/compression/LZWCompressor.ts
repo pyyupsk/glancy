@@ -27,7 +27,7 @@ export class LZWCompressor {
 
   constructor(options: CompressionOptions) {
     // Use compression level 6 as a good balance between speed and compression ratio
-    this.level = options.compressionLevel || 6;
+    this.level = options.compressionLevel ?? 6;
   }
 
   /**

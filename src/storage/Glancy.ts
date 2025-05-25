@@ -32,11 +32,11 @@ export class Glancy extends BaseStorage {
 
     if (options.compress) {
       this.compression = new LZWCompressor({
-        compressionLevel: options.compressionLevel || 6,
+        compressionLevel: options.compressionLevel ?? 6,
       });
     }
 
-    if (options.encryption && options.encryption.enabled) {
+    if (options.encryption?.enabled) {
       this.encryption = new AESEncryption({
         key: options.encryption.key,
       });
@@ -78,7 +78,7 @@ export class Glancy extends BaseStorage {
       }
 
       const item: GlancyItem<T> = JSON.parse(data);
-      if (!item || typeof item.value === 'undefined') {
+      if (!item?.value) {
         return {
           success: false,
           message: `Invalid item for key ${key}`,
@@ -142,7 +142,7 @@ export class Glancy extends BaseStorage {
       const item: GlancyItem<T> = {
         value: value ?? ({} as T),
         timestamp: Date.now(),
-        ttl: ttl || this.defaultTTL,
+        ttl: ttl ?? this.defaultTTL,
       };
 
       let serializedData = JSON.stringify(item);
@@ -403,7 +403,7 @@ export class Glancy extends BaseStorage {
       }
 
       const item: GlancyItem<unknown> = JSON.parse(data);
-      item.ttl = ttl || this.defaultTTL;
+      item.ttl = ttl ?? this.defaultTTL;
       item.timestamp = Date.now();
 
       let serializedData = JSON.stringify(item);

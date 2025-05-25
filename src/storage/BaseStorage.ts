@@ -21,7 +21,7 @@ export abstract class BaseStorage implements IStorage {
 
   constructor(options: GlancyOptions = {}) {
     this.namespace =
-      options.namespace || process.env.GLANCY_NAMESPACE || 'glancy';
+      options.namespace ?? process.env.GLANCY_NAMESPACE ?? 'glancy';
   }
 
   abstract get<T>(key: string): Promise<GlancyResponse<T>>;
