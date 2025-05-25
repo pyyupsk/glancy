@@ -1,5 +1,12 @@
 # glancy
 
+## 1.0.1
+
+### Patch Changes
+
+- **Dependencies**: Updated all development dependencies to their latest versions
+- **Code Quality**: Improved null checks using nullish coalescing and optional chaining
+
 ## 1.0.0
 
 ### Major Changes
