@@ -109,25 +109,21 @@ try {
 ## Best Practices
 
 1. **Key Naming**
-
    - Use consistent naming conventions
    - Avoid special characters
    - Use namespaces for different data types
 
 2. **TTL Management**
-
    - Set appropriate TTL values based on data freshness requirements
    - Use `touch()` to extend TTL when needed
    - Monitor TTL expiration
 
 3. **Encryption**
-
    - Keep encryption keys secure
    - Rotate keys periodically
    - Use strong keys
 
 4. **Compression**
-
    - Enable compression for large objects
    - Adjust compression level based on performance needs
    - Monitor compression ratio
