@@ -1,5 +1,8 @@
 # 🚀 Glancy Storage Library
 
+> [!WARNING]
+> **This repository has been archived as of September 2025.** This project is no longer actively maintained. While the code remains available for reference and forking, no further updates, bug fixes, or support will be provided. For production use, please consider alternative storage libraries or fork this repository for your own development.
+
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pyyupsk_glancy&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pyyupsk_glancy)
 
 **Glancy** is a powerful, flexible, and efficient client-side storage library for modern JavaScript applications. It provides a range of features including key-value storage, item expiration (TTL), encryption, compression, and the ability to handle multiple items at once. This project is designed to be simple to use while also providing advanced features for complex storage needs.
